@@ -1,0 +1,29 @@
+{
+  "name": "@live-change/framework-vue",
+  "version": "0.1.0",
+  "description": "Live Change Framework - vue components",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV=test tape tests/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/live-change/framework-vue.git"
+  },
+  "author": {
+    "email": "m8@em8.pl",
+    "name": "Michał Łaszczewski",
+    "url": "https://www.viamage.com/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/live-change/framework-vue/issues"
+  },
+  "homepage": "https://github.com/live-change/framework-vue",
+  "devDependencies": {},
+  "dependencies": {
+    "@vue/server-renderer": "^3.0.11",
+    "debug": "^4.3.1",
+    "vue": "^3.0.11"
+  }
+}
