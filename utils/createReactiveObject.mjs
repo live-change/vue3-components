@@ -4,11 +4,11 @@ function createReactiveObject(...definitions) {
   let data = {}
   for(const definition of definitions) {
     if(definition.data)
-      data = { ...data, ...(definition.data()) }
+      data = { ...data, ...(definition.data.apply({ $options: definition })) }
   }
   const object = reactive(data)
 
-  object.$options = definitions.pop()
+  object.$options = definitions[0]
 
   for(const definition of definitions) {
     for(const key in definition.computed)

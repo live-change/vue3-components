@@ -26,8 +26,7 @@
 </template>
 
 <script>
-  import guid from "../utils/guid.js"
-  import DefinedForm from "./DefinedForm.vue";
+  import DefinedForm from "./DefinedForm.vue"
 
   export default {
     name: "CommandForm",
@@ -96,7 +95,7 @@
           }
         }
         if(!this.$api.metadata.serviceDefinitions) return
-        const definition = api.metadata.serviceDefinitions.find(service => service.name == this.service)
+        const definition = this.$api.metadata.serviceDefinitions.find(service => service.name == this.service)
         return definition
       },
       serviceDefinitionMatch() {
@@ -104,10 +103,10 @@
         const definition = this.serviceDefinition
         if(definition.credentials) {
           const credentials = {
-            roles: this.$api.session.session.roles,
-            user: this.$api.session.session.user
+            roles: (this.$session && this.$session.session.roles) || [],
+            user: this.$session && this.$session.session.user
           }
-          //console.log("DEFN CRED", JSON.stringify(definition.credentials), "==", JSON.stringify(credentials))
+          console.log("DEFN CRED", JSON.stringify(definition.credentials), "==", JSON.stringify(credentials))
           if(JSON.stringify(definition.credentials) != JSON.stringify(credentials)) return
         }
         return definition
@@ -209,7 +208,7 @@
 
         this.clearValidation()
 
-        const _commandId = guid()
+        const _commandId = this.$api.guid()
 
         const analyticsValue = this.$refs.defined.formRoot.getAnalyticsValue()
         const analyticsParameters =
@@ -322,7 +321,7 @@
         }
       }
     },
-    destroyed() {
+    unmounted() {
       if(this.loadingTask) {
         this.loadingZone.finished(this.loadingTask)
       }

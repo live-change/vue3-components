@@ -1,5 +1,5 @@
 {
-  "name": "@live-change/framework-vue",
+  "name": "@live-change/vue3-components",
   "version": "0.1.0",
   "description": "Live Change Framework - vue components",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/live-change/framework-vue.git"
+    "url": "git+https://github.com/live-change/vue3-components.git"
   },
   "author": {
     "email": "m8@em8.pl",
@@ -17,10 +17,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/live-change/framework-vue/issues"
+    "url": "https://github.com/live-change/vue3-components/issues"
   },
-  "homepage": "https://github.com/live-change/framework-vue",
-  "devDependencies": {},
+  "homepage": "https://github.com/live-change/vue3-components",
   "dependencies": {
     "@vue/server-renderer": "^3.0.11",
     "debug": "^4.3.1",

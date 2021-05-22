@@ -5,12 +5,14 @@
 </template>
 
 <script>
+  import { reactive, computed, watch } from 'vue'
   import { getElementPositionInDocument } from '../utils/dom.js'
 
   class FormValue {
     constructor(definition, component) {
       this.definition = definition
       this.component = component
+      if(!this.component) throw new Error("no component parameter")
 
       this.value = null
       this.error = null
@@ -28,11 +30,11 @@
         }
         const getValidator = validation => {
           if(typeof validation == 'string') {
-            const validator = component.validators[validation]
+            const validator = component.$validators[validation]
             if(typeof validator != 'function') throw new Error(`Validator ${validation} not found`)
             return validator({}, context)
           } else {
-            const validator = component.validators[validation.name]
+            const validator = component.$validators[validation.name]
             if(typeof validator != 'function') throw new Error(`Validator ${JSON.stringify(validation)} not found`)
             return validator(validation, context)
           }
@@ -257,8 +259,9 @@
   }
 
   class FormArray extends FormValue {
-    constructor(definition, validators) {
-      super(definition, validators)
+    constructor(definition, component) {
+      super(definition, component)
+
       this.elementDefinition = definition.of
       this.elements = []
     }
@@ -547,7 +550,7 @@
       this.initForm()
       this.state = 'ready'
     },
-    destroyed() {
+    unmounted() {
     },
     watch: {
       rootValue(newValue) {

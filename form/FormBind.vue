@@ -52,7 +52,7 @@ export default {
     this.form.observeError(this.name, this.errorObserver)
     this.connected = true
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.form.unobserve(this.name, this.valueObserver)
     this.form.unobserveError(this.name, this.errorObserver)
     this.connected = false

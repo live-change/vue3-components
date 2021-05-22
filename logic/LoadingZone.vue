@@ -11,7 +11,7 @@
         <h1>Loading errors!</h1>
         <ol>
           <li v-for="error in errors" :key="error.task.name+':'+error.reason" class="error">
-            {{ taskType }} of <b>{{ error.task.name }}</b> failed because of error <b>{{ error.reason }}</b>
+            Loading of <b>{{ error.task.name }}</b> failed because of error <b>{{ error.reason }}</b>
           </li>
         </ol>
       </slot>
@@ -51,10 +51,11 @@
           this.loagindTimeout = setTimeout(() => {
             if(loadingBlockId == this.loadingBlockId && this.loading.length > 0) {
               this.connectionProblem = true
-              this.$analytics.loadingError({
-                task: "View loading", reason: "connection problem",
-                tasks: this.loading.map(t => t.name)
-              })
+              if(this.$analytics && this.$analytics.loadingError)
+                this.$analytics.loadingError({
+                  task: "View loading", reason: "connection problem",
+                  tasks: this.loading.map(t => t.name)
+                })
             }
           }, 4000)
         }
@@ -85,9 +86,9 @@
         clearTimeout(this.loadingTimeout)
 
         this.errors.push({ task, reason })
-        if(this.$analytics && this.$analytics.loadingError)
+        if(this.$analytics && this.$analytics.loadingError) {
           this.$analytics.loadingError({ task: task.name, reason })
-
+        }
         let id = this.loading.indexOf(task)
         if(id == -1) {
           this.errors.push({ task, reason: "unknown task "+task.name })
@@ -122,7 +123,7 @@
         }
       }
     },
-    beforeDestroy() {
+    beforeUnmount() {
       for(let task of this.loading) {
         if(this.$allLoadingTasks)
           this.$allLoadingTasks.splice(this.$allLoadingTasks.indexOf(task), 1)

@@ -25,6 +25,10 @@
       }
     },
     inject: ['loadingZone'],
+    data() {
+      return {
+      }
+    },
     reactive: {
       value() { return this.what }
     },
@@ -65,7 +69,7 @@
         }
       }
     },
-    beforeDestroy() {
+    beforeUnmount() {
       if(this.noLoadingZone) return;
       if(this.loadingTask) {
         this.loadingZone.finished(this.loadingTask)
