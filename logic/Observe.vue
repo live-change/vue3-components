@@ -1,12 +1,10 @@
 <template>
-  <component :is="tag">
-    <slot v-bind="{ value }" v-if="state == 'ready'"></slot>
-    <slot name="error" v-if="state == 'error'">
-      <div class="alert alert-danger" role="alert">error</div>
-    </slot>
-    <slot name="loading" v-if="state == 'loading'">
-    </slot>
-  </component>
+  <slot v-bind="{ value }" v-if="state == 'ready'"></slot>
+  <slot name="error" v-if="state == 'error'">
+    <div class="alert alert-danger" role="alert">error</div>
+  </slot>
+  <slot name="loading" v-if="state == 'loading'">
+  </slot>
 </template>
 
 <script>
@@ -16,9 +14,6 @@
       what: {
       },
       name: {
-      },
-      tag: {
-        default: "div"
       },
       noLoadingZone: {
         type: Boolean

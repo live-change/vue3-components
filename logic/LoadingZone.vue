@@ -1,25 +1,20 @@
 <template>
-  <div class="loading-zone">
-    <div class="content" :class="{ loading: loading.length }">
-      <slot></slot>
-    </div>
-    <div class="loader-main" v-if="loading.length || errors.length">
-      <slot name="loading" v-if="loading.length && !errors.length">
-        Loading...
-      </slot>
-      <slot name="error" v-if="errors.length" v-bind="{ errors }">
-        <h1>Loading errors!</h1>
-        <ol>
-          <li v-for="error in errors" :key="error.task.name+':'+error.reason" class="error">
-            Loading of <b>{{ error.task.name }}</b> failed because of error <b>{{ error.reason }}</b>
-          </li>
-        </ol>
-      </slot>
-    </div>
-  </div>
+  <slot v-bind="{ isLoading: !!loading.length, loading, errors }"></slot>
+  <slot name="loading" v-if="loading.length && !errors.length">
+    Loading...
+  </slot>
+  <slot name="error" v-if="errors.length" v-bind="{ errors }">
+    <h1>Loading errors!</h1>
+    <ol>
+      <li v-for="error in errors" :key="error.task.name+':'+error.reason" class="error">
+        Loading of <b>{{ error.task.name }}</b> failed because of error <b>{{ error.reason }}</b>
+      </li>
+    </ol>
+  </slot>    
 </template>
 
 <script>
+  import { onErrorCaptured, ref, reactive } from 'vue'
   import debugLib from 'debug'
 
   const info = debugLib('loading:info')
@@ -30,13 +25,19 @@
     data() {
       return {
         loading: [],
-        errors: [],
         loadingBlockId: 0,
         connectionProblem: false
       }
     },
     setup() {
-
+      const errors = reactive([])
+      onErrorCaptured(e => {
+        errors.push({ task: { name: 'vue' }, reason: e })
+        return true
+      })
+      return {
+        errors
+      }
     },
     computed: {
     },

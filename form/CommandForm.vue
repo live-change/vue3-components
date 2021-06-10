@@ -1,32 +1,28 @@
 <template>
-  <div class="command-form">
-    <defined-form
-        v-if="actionDefinition && (state == 'ready' || state == 'working')"
-        :tag="formTag"
-        @submit="handleSubmitEvent"
-        ref="defined"
-        :provided="{ service, action, submit, getAction: () => actionDefinition }"
-        :parameters="parameters"
-        :definition="actionDefinition"
-        :initial-values="initialValues"
-        class="form">
-      <slot></slot>
-    </defined-form>
-    <div v-if="state == 'error'">
-      <slot name="error">
-        <div class="alert alert-danger" role="alert">error</div>
-      </slot>
-    </div>
-    <div v-if="state == 'done'">
-      <slot name="done">
-        <div class="alert alert-success" role="alert">success</div>
-      </slot>
-    </div>
-  </div>
+  <defined-form
+      v-if="actionDefinition && (state == 'ready' || state == 'working')"
+      :tag="formTag"
+      @submit="handleSubmitEvent"
+      ref="defined"
+      :provided="{ service, action, submit, getAction: () => actionDefinition }"
+      :parameters="parameters"
+      :definition="actionDefinition"
+      :initial-values="initialValues"
+      v-slot="{ data }">
+    <slot v-bind="{ data }"></slot>
+  </defined-form>  
+  <slot v-if="state == 'error'" name="error">
+    <div class="alert alert-danger" role="alert">error</div>
+  </slot>
+  <slot v-if="state == 'done'" name="done">
+    <div class="alert alert-success" role="alert">success</div>
+  </slot>
 </template>
 
 <script>
   import DefinedForm from "./DefinedForm.vue"
+  import createDebug from 'debug'
+  const debug = createDebug("live-change/command-form")
 
   export default {
     name: "CommandForm",
@@ -99,6 +95,7 @@
         return definition
       },
       serviceDefinitionMatch() {
+        //console.log("METADATA SERVICE DEFS", this.$api.metadata.serviceDefinitions)
         if(!this.$api.metadata.serviceDefinitions) return
         const definition = this.serviceDefinition
         if(definition.credentials) {
@@ -106,7 +103,7 @@
             roles: (this.$session && this.$session.session.roles) || [],
             user: this.$session && this.$session.session.user
           }
-          console.log("DEFN CRED", JSON.stringify(definition.credentials), "==", JSON.stringify(credentials))
+          //console.log("DEFN CRED", JSON.stringify(definition.credentials), "==", JSON.stringify(credentials))
           if(JSON.stringify(definition.credentials) != JSON.stringify(credentials)) return
         }
         return definition
@@ -218,7 +215,7 @@
           this.$analytics.form(this.service, this.action, analyticsParameters)
 
         return this.validate({ parameters: {...this.parameters, ...additionalParameters} }).then(validationError => {
-          console.log("VALIDATION ERROR?", validationError)
+          debug("VALIDATION ERROR?", validationError)
           if(validationError) {
             if(this.$analytics && this.$analytics.formError)
               this.$analytics.formError(this.service, this.action, { analyticsParameters, error: validationError })
@@ -231,14 +228,12 @@
           let parameters = this.$refs.defined.formRoot.getValue()
           parameters = { ...parameters, ...this.parameters, ...(additionalParameters || {}), _commandId }
           //console.trace("SUBMIT!")
-          console.log("SUBMIT DATA:\n"+JSON.stringify(parameters, null, "  "))
+          debug("SUBMIT DATA:\n"+JSON.stringify(parameters, null, "  "))
 
           this.$emit("submit", { parameters })
 
-          console.log("SUBMIT EVENT FIRED")
-
           return this.$api.request([this.service, this.action], parameters).then((result) => {
-            console.log("DATA SUBMITED")
+            debug("DATA SUBMITED")
             if(this.$analytics && this.$analytics.formDone)
               this.$analytics.formDone(this.service, this.action, analyticsParameters)
             if(this.resetOnDone) {

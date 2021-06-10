@@ -1,22 +1,16 @@
-<template>
-  <div class="working-zone">
-    <div class="content" :class="{ working: working.length }">
-      <slot></slot>
-    </div>
-    <div class="loader-main" v-if="working.length || errors.length">
-      <slot name="working" v-if="working.length && !errors.length">
-        Processing...
-      </slot>
-      <slot name="error" v-if="errors.length" v-bind="{ errors }">
-        <h1>Processing errors!</h1>
-        <ol>
-          <li v-for="error in errors" :key="error.task.name+':'+error.reason" class="error">
-            Processing of <b>{{ error.task.name }}</b> failed because of error <b>{{ error.reason }}</b>
-          </li>
-        </ol>
-      </slot>
-    </div>
-  </div>
+<template>    
+  <slot v-bind="{ isWorking: !!working.length, working, errors }"></slot>    
+  <slot name="working" v-if="working.length && !errors.length">
+    Processing...
+  </slot>
+  <slot name="error" v-if="errors.length" v-bind="{ errors }">
+    <h1>Processing errors!</h1>
+    <ol>
+      <li v-for="error in errors" :key="error.task.name+':'+error.reason" class="error">
+        Processing of <b>{{ error.task.name }}</b> failed because of error <b>{{ error.reason }}</b>
+      </li>
+    </ol>
+  </slot>
 </template>
 
 <script>
@@ -48,7 +42,7 @@
           this.loagindTimeout = setTimeout(() => {
             if(workingBlockId == this.workingBlockId && this.working.length > 0) {
               this.connectionProblem = true
-              f(this.$analytics && this.$analytics.workingError)
+              if(this.$analytics && this.$analytics.workingError)
               this.$analytics.workingError({
                 task: "View working", reason: "connection problem",
                 tasks: this.working.map(t => t.name)

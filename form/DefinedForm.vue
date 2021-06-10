@@ -1,24 +1,24 @@
 <template>
-  <component :is="tag" v-on:submit="ev => $emit('submit', ev)">
-    <slot></slot>
+  <component v-if="tag" :is="tag" v-on:submit="ev => $emit('submit', ev)">
+    <slot v-bind="{ data }"></slot>
   </component>
+  <slot v-else v-bind="{ data }"></slot>
 </template>
 
 <script>
   import { reactive, computed, watch } from 'vue'
   import { getElementPositionInDocument } from '../utils/dom.js'
 
+  const errorSufix = 'Error'
+
   class FormValue {
-    constructor(definition, component) {
+    constructor(definition, component, data, property) {
       this.definition = definition
       this.component = component
+      this.data = data
+      this.property = property
       if(!this.component) throw new Error("no component parameter")
 
-      this.value = null
-      this.error = null
-
-      this.errorObservers = []
-      this.valueObservers = []
       this.validators = []
       if(definition.validation) {
         let validations = Array.isArray(definition.validation) ? definition.validation : [definition.validation]
@@ -47,19 +47,24 @@
     }
 
     setValue(value) {
-      this.value = value
-      for(let observer of this.valueObservers) observer(value)
-    }
-    setError(error) {
-      this.error = error
-      for(let observer of this.errorObservers) observer(error)
+      this.data[this.property] = value
     }
     getAnalyticsValue() {
       if(this.definition.secret) return undefined
-      return this.value
+      return this.data[this.property]
     }
     getValue() {
-      return this.value
+      return this.data[this.property]
+    }
+    setError(error) {
+      this.data[this.property+errorSufix] = error
+    }
+    getError() {
+      return this.data[this.property+errorSufix]
+    }
+
+    setProperty(name) {
+      this.property = name
     }
 
     reset(initialValue) {
@@ -84,37 +89,16 @@
       if(this.definition.singleUse) this.reset(initialValue)
     }
 
-    observe(observer) {
-      this.valueObservers.push(observer)
-      observer(this.getValue())
-    }
-
-    unobserve(observer) {
-      const id = this.valueObservers.indexOf(observer)
-      if(id == -1) throw new Error("Observer not found")
-      this.valueObservers.splice(id, 1)
-    }
-
-    observeError(observer) {
-      this.errorObservers.push(observer)
-      observer(this.error)
-    }
-
-    unobserveError(observer) {
-      const id = this.errorObservers.indexOf(observer)
-      if(id == -1) throw new Error("Observer not found")
-      this.errorObservers.splice(id, 1)
-    }
-
     validate(context) {
       let promises = []
+      const value = this.getValue()
       for(let validator of this.validators) {
-        promises.push(validator(this.value, context))
+        promises.push(validator(value, context))
       }
       return Promise.all(promises).then(results => {
         for(let error of results) {
           if(error) {
-            if(this.error == error) return error
+            if(this.data[this.property+errorSufix] == error) return error
             this.setError(error)
             return error
           }
@@ -128,47 +112,49 @@
   }
 
   class FormObject extends FormValue {
-    constructor(definition, component) {
-      super(definition, component)
+    constructor(definition, component, data, property) {
+      super(definition, component, data, property)
 
-      this.value = {}
+      this.object = this.data[this.property]
       this.properties = {}
 
       for(let propName in definition.properties) {
         let propDefn = definition.properties[propName]
 
         if(propDefn.type == "Object") {
-          this.properties[propName] = new FormObject(definition.properties[propName], this.component)
+          this.properties[propName] =
+              new FormObject(definition.properties[propName], this.component, this.object, propName)
         } else if(propDefn.type == 'Array') {
-          this.properties[propName] = new FormArray(definition.properties[propName], this.component)
+          this.properties[propName] =
+              new FormArray(definition.properties[propName], this.component, this.object, propName)
         } else {
-          this.properties[propName] = new FormValue(definition.properties[propName], this.component)
+          this.properties[propName] =
+              new FormValue(definition.properties[propName], this.component, this.object, propName)
         }
-        this.value[propName] = this.properties[propName].getValue()
-        this.properties[propName].observe((value) => {
-          if(!this.value) return
-          this.value[propName] = value
-          for(let observer of this.valueObservers) observer(this.value)
-        })
       }
+    }
+
+    setProperty(name) {
+      this.property = name
+      this.object = this.data[this.property]
     }
 
     reset(initialValue) {
       if(this.definition.type == 'Object') {
-        this.value = JSON.parse(JSON.stringify(initialValue ||
+        this.data[this.property] = JSON.parse(JSON.stringify(initialValue ||
           (this.definition.hasOwnProperty('defaultValue') ? this.definition.defaultValue : {} )))
-        if(this.value) {
-          for(const key in this.value) {
-            if(!this.value[key]) delete this.value[key]
+        this.object = this.data[this.property]
+        if(this.object) {
+          for(const key in this.object) {
+            if(!this.object[key]) delete this.object[key]
           }
         }
       }
-      if(this.value) {
+      if(this.object) {
         for(let propName in this.properties) {
           this.properties[propName].reset(initialValue && initialValue[propName])
         }
       }
-      for(let observer of this.valueObservers) observer(this.value)
     }
     afterError(initialValue) {
       if(this.definition.singleUse) return this.reset()
@@ -210,7 +196,6 @@
     }
 
     getValue() {
-      if(this.value == null) return null
       let obj = { ...this.value }
       for(let propName in this.properties) {
         obj[propName] = this.properties[propName].getValue()
@@ -232,58 +217,57 @@
       for(let propName in this.properties) {
         this.properties[propName].setValue(value && value[propName])
       }
-      for(let observer of this.valueObservers) observer(value)
     }
 
     setDefinition(propName, defn) {
-      const oldData = this.value[propName]
+      const oldData = this.object[propName]
       this.definition = JSON.parse(JSON.stringify(this.definition))
       const propDefn = JSON.parse(JSON.stringify(defn))
       this.definition.properties[propName] = propDefn
       const definition = this.definition
       if(propDefn.type == "Object") {
-        this.properties[propName] = new FormObject(definition.properties[propName])
+        this.properties[propName] =
+            new FormObject(definition.properties[propName], this.component, this.object, propName)
       } else if(propDefn.type == 'Array') {
-        this.properties[propName] = new FormArray(definition.properties[propName])
+        this.properties[propName] =
+            new FormArray(definition.properties[propName], this.component, this.object, propName)
       } else {
-        this.properties[propName] = new FormValue(definition.properties[propName])
+        this.properties[propName] =
+            new FormValue(definition.properties[propName], this.component, this.object, propName)
       }
       this.properties[propName].reset(oldData)
-      this.value[propName] = this.properties[propName].getValue()
-      this.properties[propName].observe((value) => {
-        this.value[propName] = value
-        for(let observer of this.valueObservers) observer(this.value)
-      })
+      this.object[propName] = this.properties[propName].getValue()
     }
 
   }
 
   class FormArray extends FormValue {
-    constructor(definition, component) {
-      super(definition, component)
-
+    constructor(definition, component, data, property) {
+      super(definition, component, data, property)
       this.elementDefinition = definition.of
       this.elements = []
+      this.object = this.data[this.property]
     }
-    newElement() {
+    setProperty(name) {
+      this.property = name
+      this.object = this.data[this.property]
+    }
+    newElement(index) {
       if(this.elementDefinition.type == "Object") {
-        return new FormObject(this.elementDefinition, this.component)
+        return new FormObject(this.elementDefinition, this.component, this.object, index)
       } else if(this.elementDefinition.type == 'Array') {
-        return new FormArray(this.elementDefinition, this.component)
+        return new FormArray(this.elementDefinition, this.component, this.object, index)
       } else {
-        return new FormValue(this.elementDefinition, this.component)
+        return new FormValue(this.elementDefinition, this.component, this.object, index)
       }
     }
     reset(initialValue) {
       initialValue = initialValue || this.definition.defaultValue || []
-      this.value = new Array(initialValue.length)
+      this.data[this.property] = new Array(initialValue.length)
+      this.elements = this.data[this.property]
       for(let i = 0; i < initialValue.length; i++) {
-        let n = this.newElement()
+        let n = this.newElement(this.elements.length)
         n.reset(initialValue[i])
-        n.observe((value) => {
-          this.value[i] = value
-          for(let observer of this.valueObservers) observer(this.value)
-        })
         this.elements.push(n)
       }
       super.setValue(initialValue)
@@ -339,7 +323,7 @@
     }
 
     setValue(value) {
-      this.value = value
+      this.data[this.property] = value
       if(!value) return;
       for(let i = 0; i < value.length; i++) {
         if (this.elements[i]) {
@@ -347,29 +331,29 @@
         } else {
           let n = this.newElement()
           n.reset(value[i])
-          n.observe((value) => {
-            this.value[i] = value
-            for(let observer of this.valueObservers) observer(this.value)
-          })
           this.elements.push(n)
         }
       }
       this.elements = this.elements.slice(0, value.length)
-      for(let observer of this.valueObservers) observer(value)
+    }
+
+    updateElementIndices() {
+      for(let i = 0; i < this.elements.length; i++) {
+        if(this.elements[i].property != i) {
+          this.elements[i].setProperty(i)
+        }
+      }
     }
 
     addElement(initialValue) {
       let el = this.newElement()
       el.reset(initialValue)
       this.elements.push(el)
-      this.value = this.getValue()
-      for(let observer of this.valueObservers) observer(this.value)
     }
 
     removeElement(i) {
       this.elements.splice(i, 1)
-      this.value = this.getValue()
-      for(let observer of this.valueObservers) observer(this.value)
+      this.updateElementIndices()
     }
   }
 
@@ -411,17 +395,13 @@
           setFieldError: (name, value) => this.setFieldError(name, value),
           getValue: () => this.formRoot.getValue(),
           reset: () => this.reset(),
-          observe: (propName, observer) => this.observe(propName, observer),
-          unobserve: (propName, observer) => this.unobserve(propName, observer),
-          observeError: (propName, observer) => this.observeError(propName, observer),
-          unobserveError: (propName, observer) => this.unobserveError(propName, observer),
           addValidator: (propName, validator) => this.addValidator(propName, validator),
           removeValidator: (propName, validator) => this.addValidator(propName, validator),
           validateField: (propName) => this.validateField(propName),
           validate: () => this.validate(),
           clearFieldValidation: (propName) => this.clearFieldValidation(propName),
           clearValidation: () => this.clearValidation(),
-
+          
           addElementToArray: (propName, initialValue) => this.addElementToArray(propName, initialValue),
           removeElementFromArray: (propName, index) => this.removeElementFromArray(propName, index)
         }
@@ -430,6 +410,8 @@
     inject: ['loadingZone', 'workingZone'],
     data() {
       return {
+        state: 'starting',
+        data: {},
         formRoot: {}
       }
     },
@@ -484,26 +466,12 @@
         return this.getNode(name).setError(error)
       },
       initForm() {
-        this.formRoot = new FormObject(this.definition, this)
+        this.formRoot = new FormObject(this.definition, this, this, 'data')
         this.reset()
       },
       reset() {
         this.formRoot.reset(this.initialValues)
         //console.log("Form after reset", JSON.stringify(this.formRoot.getValue(), null, '  '))
-      },
-      observe(name, observer) {
-        this.getNode(name).observe(observer)
-      },
-      unobserve(name, observer) {
-        const node = this.getNodeIfExists(name)
-        if(node) node.unobserve(observer)
-      },
-      observeError(name, observer) {
-        this.getNode(name).observeError(observer)
-      },
-      unobserveError(name, observer) {
-        const node = this.getNodeIfExists(name)
-        if(node) node.unobserveError(observer)
       },
       addValidator(name, validator) {
         this.getNode(name).validators.push(validator)

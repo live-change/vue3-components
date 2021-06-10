@@ -14,6 +14,3 @@ export { registerComponents }
 import createReactiveObject from "./utils/createReactiveObject.mjs"
 
 export { createReactiveObject }
-
-import validators from "./utils/validators.js"
-export { validators }

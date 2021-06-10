@@ -1,18 +1,10 @@
-<template>
-  <div>
-    <div v-if="state == 'ready'">
-      <slot :value="what"></slot>
-    </div>
-    <div v-if="state == 'error'">
-      <slot name="error">
-        <div class="alert alert-danger" role="alert">error</div>
-      </slot>
-    </div>
-    <div v-if="state == 'loading'">
-      <slot name="loading">
-      </slot>
-    </div>
-  </div>
+<template>  
+  <slot v-if="state == 'ready'" :value="what"></slot>
+  <slot v-if="state == 'error'" name="error">
+    <div class="alert alert-danger" role="alert">error</div>
+  </slot>    
+  <slot v-if="state == 'loading'" name="loading">
+  </slot>  
 </template>
 
 <script>
