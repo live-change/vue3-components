@@ -1,5 +1,5 @@
 <template>
-  <component v-if="tag" :is="tag" v-on:submit="ev => $emit('submit', ev)">
+  <component v-if="tag" :is="tag" v-on:submit="ev => $emit('submit', ev)" :class="class" :style="style">
     <slot v-bind="{ data }"></slot>
   </component>
   <slot v-else v-bind="{ data }"></slot>
@@ -7,7 +7,7 @@
 
 <script>
   import { reactive, computed, watch } from 'vue'
-  import { getElementPositionInDocument } from '../utils/dom.js'
+  import { getElementPositionInDocument } from '../utils/dom.mjs'
 
   const errorSufix = 'Error'
 
@@ -380,6 +380,12 @@
       parameters: {
         type: Object,
         default: null
+      },
+      class: {
+        type: String
+      },
+      style: {
+        type: String
       }
     },
     provide() {

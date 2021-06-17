@@ -10,7 +10,7 @@
         Loading of <b>{{ error.task.name }}</b> failed because of error <b>{{ error.reason }}</b>
       </li>
     </ol>
-  </slot>    
+  </slot>
 </template>
 
 <script>

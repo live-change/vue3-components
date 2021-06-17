@@ -1,9 +1,17 @@
 <template>
-  <slot v-bind="{ value }" v-if="state == 'ready'"></slot>
-  <slot name="error" v-if="state == 'error'">
+  <component v-if="tag" :is="tag" v-on:submit="ev => $emit('submit', ev)">
+    <slot v-if="state == 'ready'" v-bind="{ value }" ></slot>
+    <slot v-if="state == 'error'" name="error">
+      <div class="alert alert-danger" role="alert">error</div>
+    </slot>
+    <slot v-if="state == 'loading'" name="loading">
+    </slot>
+  </component>
+  <slot v-if="!tag && state == 'ready'" v-bind="{ value }" ></slot>
+  <slot v-if="!tag && state == 'error'" name="error">
     <div class="alert alert-danger" role="alert">error</div>
   </slot>
-  <slot name="loading" v-if="state == 'loading'">
+  <slot v-if="!tag && state == 'loading'" name="loading">
   </slot>
 </template>
 
@@ -11,7 +19,11 @@
   export default {
     name: "Observe",
     props: {
+      tag :{
+        default: ''
+      },
       what: {
+        required: true
       },
       name: {
       },

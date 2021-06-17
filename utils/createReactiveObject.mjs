@@ -3,8 +3,10 @@ import { reactive, computed, watch } from 'vue'
 function createReactiveObject(...definitions) {
   let data = {}
   for(const definition of definitions) {
-    if(definition.data)
+    if(typeof definition.data == 'function')
       data = { ...data, ...(definition.data.apply({ $options: definition })) }
+    if(typeof definition.data == 'object' && definition.data)
+      data = { ...data, ...definition.data }
   }
   const object = reactive(data)
 

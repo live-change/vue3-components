@@ -8,6 +8,8 @@
       :parameters="parameters"
       :definition="actionDefinition"
       :initial-values="initialValues"
+      :class="class"
+      :style="style"
       v-slot="{ data }">
     <slot v-bind="{ data }"></slot>
   </defined-form>  
@@ -66,6 +68,12 @@
       formTag: {
         type: String,
         default: 'form'
+      },
+      class: {
+        type: String
+      },
+      style: {
+        type: String
       }
     },
     inject: ['loadingZone', 'workingZone'],
@@ -95,7 +103,7 @@
         return definition
       },
       serviceDefinitionMatch() {
-        //console.log("METADATA SERVICE DEFS", this.$api.metadata.serviceDefinitions)
+        //console.log("METADATA SERVICE DEFS", this.$api.metadata.serviceDefinitions)      
         if(!this.$api.metadata.serviceDefinitions) return
         const definition = this.serviceDefinition
         if(definition.credentials) {
