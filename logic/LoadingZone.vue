@@ -1,8 +1,23 @@
 <template>
-  <slot v-bind="{ isLoading: !!loading.length, loading, errors }"></slot>
-  <slot name="loading" v-if="loading.length && !errors.length">
-    Loading...
-  </slot>
+  <suspense v-if="suspense">
+    <template #default>
+      <div>
+        <slot v-bind="{ isLoading: !!loading.length, loading, errors }"></slot>
+        <slot name="loading" v-if="loading.length && !errors.length">
+          Loading...
+        </slot>
+      </div>
+    </template>
+    <template #fallback>
+      <div>
+        <slot name="loading">
+          Loading...
+        </slot>
+      </div>
+    </template>
+  </suspense>
+  <slot v-else v-bind="{ isLoading: !!loading.length, loading, errors }"></slot>
+
   <slot name="error" v-if="errors.length" v-bind="{ errors }">
     <h1>Loading errors!</h1>
     <ol>
@@ -22,6 +37,12 @@
 
   export default {
     name: "LoadingZone",
+    props: {
+      suspense: {
+        type: Boolean,
+        default: false
+      }
+    },
     data() {
       return {
         loading: [],

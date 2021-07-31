@@ -55,23 +55,26 @@
     },
     watch: {
       state(state) {
-        if(this.noLoadingZone) return;
+        if(this.noLoadingZone) return
         if(state == 'ready' && this.loadingTask) {
           this.loadingZone.finished(this.loadingTask)
           this.loadingTask = null
         }
-        if(state == 'error' && this.loadingTask) {
+        if(state == 'error') {
+          if(!this.loadingTask) {
+            this.loadingTask = this.loadingZone.started({ name: this.computedName })
+          }
           this.loadingZone.failed(this.loadingTask, this.error)
           this.loadingTask = null
         }
       }
     },
     created() {
-      if(this.noLoadingZone) return;
+      if(this.noLoadingZone) return
       if(this.state != 'ready') {
         this.loadingTask = this.loadingZone.started({ name: this.computedName })
         if(this.error) {
-          this.loadingZone.failed(this.loadingTask, this.loadingError)
+          this.loadingZone.failed(this.loadingTask, this.error)
           this.loadingTask = null
         }
       }
