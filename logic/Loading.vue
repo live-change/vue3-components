@@ -1,10 +1,10 @@
-<template>  
+<template>
   <slot v-if="state == 'ready'" :value="what"></slot>
   <slot v-if="state == 'error'" name="error">
     <div class="alert alert-danger" role="alert">error</div>
-  </slot>    
+  </slot>
   <slot v-if="state == 'loading'" name="loading">
-  </slot>  
+  </slot>
 </template>
 
 <script>

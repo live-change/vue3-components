@@ -1,7 +1,7 @@
 <template>
   <visible-area @update="setVisibleArea" ref="area">
     <div class="scroll-top-fill" :style="{ height: topFill + 'px' }"></div>
-    <slot v-if="isLoadingTop" name="loadingTop" v-bind="{ connectionProblem: isLoadingTopTooLong }" 
+    <slot v-if="isLoadingTop" name="loadingTop" v-bind="{ connectionProblem: isLoadingTopTooLong }"
           ref="topLoading">
     </slot>
     <div class="scroll-data" v-for="(row, index) in visibleState.rows" :ref="'row_'+index" :id="rowId(row)"
@@ -316,10 +316,11 @@
         }
       },
       measureRows() {
-        //console.trace("MEASURE")        
+        //console.trace("MEASURE")
         const elements = Object.keys(this.$refs)
-          .filter(key=>key.slice(0,4) == 'row_')
+          .filter(key => key.slice(0,4) == 'row_')
           .map(key => this.$refs[key])
+          .filter(key => !!key)
         if(!elements) return []
         for(const element of elements) {
           if(!element) debugger
