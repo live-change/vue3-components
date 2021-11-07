@@ -21,8 +21,8 @@
   },
   "homepage": "https://github.com/live-change/vue3-components",
   "dependencies": {
-    "@vue/server-renderer": "^3.2.4",
+    "@vue/server-renderer": "^3.2.21",
     "debug": "^4.3.2",
-    "vue": "^3.2.4"
+    "vue": "^3.2.6"
   }
 }

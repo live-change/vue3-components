@@ -12,7 +12,7 @@
       :style="style"
       v-slot="{ data }">
     <slot v-bind="{ data }"></slot>
-  </defined-form>  
+  </defined-form>
   <slot v-if="state == 'error'" name="error">
     <div class="alert alert-danger" role="alert">error</div>
   </slot>
@@ -98,31 +98,17 @@
             return this.serviceDefinitionSource
           }
         }
-        if(!this.$api.metadata.serviceDefinitions) return
-        const definition = this.$api.metadata.serviceDefinitions.find(service => service.name == this.service)
-        return definition
-      },
-      serviceDefinitionMatch() {
-        //console.log("METADATA SERVICE DEFS", this.$api.metadata.serviceDefinitions)      
-        if(!this.$api.metadata.serviceDefinitions) return
-        const definition = this.serviceDefinition
-        if(definition.credentials) {
-          const credentials = {
-            roles: (this.$session && this.$session.session.roles) || [],
-            user: this.$session && this.$session.session.user
-          }
-          //console.log("DEFN CRED", JSON.stringify(definition.credentials), "==", JSON.stringify(credentials))
-          if(JSON.stringify(definition.credentials) != JSON.stringify(credentials)) return
-        }
+        if(!this.$api.metadata.api?.services) return
+        const definition = this.$api.metadata.api?.services.find(service => service.name == this.service)
         return definition
       },
       actionDefinition() {
-        return this.serviceDefinitionMatch
+        return this.serviceDefinition
           && this.serviceDefinition.actions[this.action]
       },
       definitionNotFound() {
         return (this.$api.metadata.serviceDefinitions && !this.serviceDefinition)
-            || (this.serviceDefinitionMatch && !this.actionDefinition)
+            || (this.serviceDefinition && !this.actionDefinition)
       },
       loadingError() {
         return this.definitionNotFound ? "notFound" : this.serviceDefinitionsError
