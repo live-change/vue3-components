@@ -1,5 +1,5 @@
-<template>    
-  <slot v-bind="{ isWorking: !!working.length, working, errors }"></slot>    
+<template>
+  <slot v-bind="{ isWorking: !!working.length, working, errors }"></slot>
   <slot name="working" v-if="working.length && !errors.length">
     Processing...
   </slot>
@@ -21,6 +21,7 @@
 
   export default {
     name: "WorkingZone",
+    emits: ['isWorking', 'error'],
     data() {
       return {
         working: [],
@@ -29,7 +30,15 @@
         connectionProblem: false
       }
     },
+    watch: {
+      isWorking(w) {
+        this.$emit('isWorking', w)
+      }
+    },
     computed: {
+      isWorking() {
+        return this.working.length > 0
+      }
     },
     methods: {
       workingStarted(task) {
@@ -91,6 +100,7 @@
           this.$allWorkingTasks.splice(this.$allWorkingTasks.indexOf(task), 1)
         if(this.$allWorkingErrors)
           this.$allWorkingErrors.push({ task, reason })
+        this.$emit('error', this.errors)
       },
       addWorkingPromise(name, promise) {
         let task = this.workingStarted({ name, promise })

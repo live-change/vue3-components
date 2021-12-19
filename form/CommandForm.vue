@@ -76,6 +76,7 @@
         type: String
       }
     },
+    emits: ['submit', 'done', 'error'],
     inject: ['loadingZone', 'workingZone'],
     data() {
       return {
@@ -289,6 +290,7 @@
         })
       },
       handleSubmitEvent(ev) {
+        console.log("HANDLE SUBMIT EVENT!", ev)
         ev.preventDefault()
         this.submit()
       },

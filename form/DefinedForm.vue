@@ -1,5 +1,5 @@
 <template>
-  <component v-if="tag" :is="tag" v-on:submit="ev => $emit('submit', ev)" :class="class" :style="style">
+  <component v-if="tag" :is="tag" v-on:submit="ev => handleSubmitEvent(ev)" :class="class" :style="style">
     <slot v-bind="{ data }"></slot>
   </component>
   <slot v-else v-bind="{ data }"></slot>
@@ -388,6 +388,7 @@
         type: String
       }
     },
+    //emits: ['submit', 'update'],
     provide() {
       return {
         form: {
@@ -407,7 +408,7 @@
           validate: () => this.validate(),
           clearFieldValidation: (propName) => this.clearFieldValidation(propName),
           clearValidation: () => this.clearValidation(),
-          
+
           addElementToArray: (propName, initialValue) => this.addElementToArray(propName, initialValue),
           removeElementFromArray: (propName, index) => this.removeElementFromArray(propName, index)
         }
@@ -519,6 +520,11 @@
         let position = getElementPositionInDocument(errorFieldElement)
         window.scrollTo(0, position.y - 100) /// TODO: remove fixed nav-bar and do it properly.
       },
+      handleSubmitEvent(ev) {
+        console.log("HANDLE SUBMIT!", ev)
+        ev.preventDefault()
+        this.$emit('submit', ev)
+      }
     },
     created() {
       this.initForm()

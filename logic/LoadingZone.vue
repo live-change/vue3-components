@@ -37,6 +37,7 @@
 
   export default {
     name: "LoadingZone",
+    emits: ['isLoading', 'error'],
     props: {
       suspense: {
         type: Boolean,
@@ -60,7 +61,15 @@
         errors
       }
     },
+    watch: {
+      isLoading(l) {
+        this.$emit('isLoading', l)
+      }
+    },
     computed: {
+      isLoading() {
+        return this.loading.length > 0
+      }
     },
     methods: {
       loadingStarted(task) {
@@ -122,6 +131,7 @@
           this.$allLoadingTasks.splice(this.$allLoadingTasks.indexOf(task), 1)
         if(this.$allLoadingErrors)
           this.$allLoadingErrors.push({ task, reason })
+        this.$emit('error', this.errors)
       },
       addLoadingPromise(name, promise) {
         let task = this.loadingStarted({ name, promise })
