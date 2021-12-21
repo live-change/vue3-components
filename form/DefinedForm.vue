@@ -379,7 +379,7 @@
       },
       parameters: {
         type: Object,
-        default: null
+        default() { return {} }
       },
       class: {
         type: String
@@ -521,7 +521,6 @@
         window.scrollTo(0, position.y - 100) /// TODO: remove fixed nav-bar and do it properly.
       },
       handleSubmitEvent(ev) {
-        console.log("HANDLE SUBMIT!", ev)
         ev.preventDefault()
         this.$emit('submit', ev)
       }

@@ -194,7 +194,7 @@
         this.$refs.defined.scrollToError()
       },
       async submit(additionalParameters) {
-        if(!(this.state == 'ready' || this.state == 'error')) return;
+        if(!(this.state == 'ready' || this.state == 'error')) return
         this.state = 'working'
         this.workingTask = this.workingZone.started({ name: `service ${this.service} action ${this.action}` })
 
@@ -290,7 +290,7 @@
         })
       },
       handleSubmitEvent(ev) {
-        console.log("HANDLE SUBMIT EVENT!", ev)
+        //console.log("HANDLE SUBMIT EVENT!", ev)
         ev.preventDefault()
         this.submit()
       },
