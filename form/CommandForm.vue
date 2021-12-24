@@ -92,15 +92,15 @@
       serviceDefinition() {
         if(this.serviceDefinitionSource) {
           if(typeof this.serviceDefinitionSource == 'string') {
-            const definition = this.$api.metadata.serviceDefinitions
+            const definition = this.$api.metadata.serviceDefinitions.value
                 .find(service => service.name == this.serviceDefinitionSource)
             return definition
           } else {
             return this.serviceDefinitionSource
           }
         }
-        if(!this.$api.metadata.api?.services) return
-        const definition = this.$api.metadata.api?.services.find(service => service.name == this.service)
+        if(!this.$api.metadata.api?.value?.services) return
+        const definition = this.$api.metadata.api?.value?.services.find(service => service.name == this.service)
         return definition
       },
       actionDefinition() {
