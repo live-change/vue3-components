@@ -5,6 +5,9 @@ import Observe from "./Observe.vue"
 
 export { Loading, LoadingZone, WorkingZone, Observe }
 
+import { analytics, useAnalytics, installRouterAnalytics } from "./analytics.js"
+export { analytics, useAnalytics, installRouterAnalytics }
+
 function registerLogicComponents(app) {
   app.component("loading", Loading)
   app.component("loading-zone", LoadingZone)

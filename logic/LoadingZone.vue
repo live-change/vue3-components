@@ -13,6 +13,7 @@
         <slot name="loading">
           Loading...
         </slot>
+        <div style="display: none">SUSPEND FALLBACK</div>
       </div>
     </template>
   </suspense>
@@ -30,6 +31,7 @@
 
 <script>
   import { onErrorCaptured, ref, reactive } from 'vue'
+  import analytics from './analytics.js'
   import debugLib from 'debug'
 
   const info = debugLib('loading:info')
@@ -74,19 +76,17 @@
     methods: {
       loadingStarted(task) {
         if(this.loading.length == 0) {
-          if(this.$analytics && this.$analytics.loadingStarted)
-            this.$analytics.loadingStarted({ task: task.name })
+          analytics.emit('loadingStarted', { task: task.name })
           info('LOADING STARTED!')
 
           const loadingBlockId = this.loadingBlockId
-          this.loagindTimeout = setTimeout(() => {
+          this.loadingTimeout = setTimeout(() => {
             if(loadingBlockId == this.loadingBlockId && this.loading.length > 0) {
               this.connectionProblem = true
-              if(this.$analytics && this.$analytics.loadingError)
-                this.$analytics.loadingError({
-                  task: "View loading", reason: "connection problem",
-                  tasks: this.loading.map(t => t.name)
-                })
+              analytics.emit('loadingError', {
+                task: 'View loading', reason: "connection problem",
+                tasks: this.loading.map(t => t.name)
+              })
             }
           }, 4000)
         }
@@ -106,8 +106,7 @@
         if(this.loading.length == 0) {
           this.loadingBlockId++
           clearTimeout(this.loadingTimeout)
-          if(this.$analytics && this.$analytics.loadingDone)
-            this.$analytics.loadingDone({ task: task.name })
+          analytics.emit('loadingDone', { task: task.name })
           this.$nextTick(this.$router.loadingDone)
         }
       },
@@ -117,9 +116,7 @@
         clearTimeout(this.loadingTimeout)
 
         this.errors.push({ task, reason })
-        if(this.$analytics && this.$analytics.loadingError) {
-          this.$analytics.loadingError({ task: task.name, reason })
-        }
+        analytics.emit('loadingError', { task: task.name, reason })
         let id = this.loading.indexOf(task)
         if(id == -1) {
           this.errors.push({ task, reason: "unknown task "+task.name })
@@ -143,7 +140,7 @@
         promise
           .then((result) => this.loadingFinished(task))
         return promise
-      }
+      },
     },
     provide() {
       return {

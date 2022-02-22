@@ -43,16 +43,15 @@
     methods: {
       workingStarted(task) {
         if(this.working.length == 0) {
-          if(this.$analytics && this.$analytics.workingStarted)
-            this.$analytics.workingStarted({ task: task.name })
+          analytics.emit('workingStarted', { task: task.name })
+
           info('WORKING STARTED!')
 
           const workingBlockId = this.workingBlockId
           this.loagindTimeout = setTimeout(() => {
             if(workingBlockId == this.workingBlockId && this.working.length > 0) {
               this.connectionProblem = true
-              if(this.$analytics && this.$analytics.workingError)
-              this.$analytics.workingError({
+              analytics.emit('workingError', {
                 task: "View working", reason: "connection problem",
                 tasks: this.working.map(t => t.name)
               })
@@ -75,8 +74,7 @@
         if(this.working.length == 0) {
           this.workingBlockId++
           clearTimeout(this.workingTimeout)
-          if(this.$analytics && this.$analytics.workingDone)
-            this.$analytics.workingDone({ task: task.name })
+          analytics.emit('workingDone', { task: task.name })
           this.$nextTick(this.$router.workingDone)
         }
       },
@@ -86,8 +84,7 @@
         clearTimeout(this.workingTimeout)
 
         this.errors.push({ task, reason })
-        if(this.$analytics && this.$analytics.workingError)
-          this.$analytics.workingError({ task: task.name, reason })
+        analytics.emit('workingError', { task: task.name, reason })
 
         let id = this.working.indexOf(task)
         if(id == -1) {

@@ -22,7 +22,8 @@
 </template>
 
 <script>
-  import DefinedForm from "./DefinedForm.vue"
+  import DefinedForm from './DefinedForm.vue'
+  import analytics from '../logic/analytics.js'
   import createDebug from 'debug'
   const debug = createDebug("live-change/command-form")
 
@@ -200,20 +201,20 @@
 
         this.clearValidation()
 
-        const _commandId = this.$api.guid()
+        const _commandId = this.$api.uid()
 
         const analyticsValue = this.$refs.defined.formRoot.getAnalyticsValue()
         const analyticsParameters =
             { ...analyticsValue, ...this.parameters, ...(additionalParameters || {}), _commandId }
 
-        if(this.$analytics && this.$analytics.form)
-          this.$analytics.form(this.service, this.action, analyticsParameters)
+        analytics.emit('form', { service: this.service, action: this.action, parameters: analyticsParameters })
 
         return this.validate({ parameters: {...this.parameters, ...additionalParameters} }).then(validationError => {
           debug("VALIDATION ERROR?", validationError)
           if(validationError) {
-            if(this.$analytics && this.$analytics.formError)
-              this.$analytics.formError(this.service, this.action, { analyticsParameters, error: validationError })
+            analytics.emit('formError', {
+              service: this.service, action: this.action, parameters: analyticsParameters, error: validationError
+            })
             this.workingZone.finished(this.workingTask)
             this.state = 'ready'
             this.scrollToError()
@@ -229,8 +230,9 @@
 
           return this.$api.request([this.service, this.action], parameters).then((result) => {
             debug("DATA SUBMITED")
-            if(this.$analytics && this.$analytics.formDone)
-              this.$analytics.formDone(this.service, this.action, analyticsParameters)
+            analytics.emit('formDone', {
+              service: this.service, action: this.action, parameters: analyticsParameters, error: validationError
+            })
             if(this.resetOnDone) {
               this.state = 'ready'
               this.reset()
@@ -242,8 +244,10 @@
             this.$emit('done', { result , parameters })
             this.workingZone.finished(this.workingTask)
           }).catch((error) => {
-            if(this.$analytics && this.$analytics.formError)
-              this.$analytics.formError(this.service, this.action, { analyticsParameters, error })
+            console.error("FORM ERROR", error)
+            analytics.emit('formError', {
+              service: this.service, action: this.action, parameters: analyticsParameters, error
+            })
             this.$refs.defined.formRoot.afterError(this.initialValues)
             if(error.properties) {
               for(let propName in error.properties) {
