@@ -14,6 +14,7 @@
 </template>
 
 <script>
+import analytics from '../logic/analytics.js'
   import debugLib from 'debug'
 
   const info = debugLib('working:info')
